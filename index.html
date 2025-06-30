@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Grid Preview Widget</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        :root {
+            --primary: #8a3ab9;
+            --secondary: #4c68d7;
+            --accent: #cd486b;
+            --light-bg: #f8f9fa;
+            --dark-bg: #1a1a1a;
+            --text: #333;
+            --text-light: #777;
+            --border: #eaeaea;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #fafafa 0%, #f0f2f5 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .widget-container {
+            width: 100%;
+            max-width: 935px;
+            background: white;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dbdbdb;
+            border-radius: 12px;
+        }
+        
+        /* Header */
+        .header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #efefef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .logo i {
+            font-size: 28px;
+            color: #e1306c;
+        }
+        
+        /* Tabs navigation */
+        .tabs {
+            display: flex;
+            gap: 40px;
+        }
+        
+        .tab {
+            background: transparent;
+            border: none;
+            color: #8e8e8e;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            color: #0095f6;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: #0095f6;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: none;
+            color: #262626;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        /* Calendar filter */
+        .calendar-filter {
+            padding: 16px 24px;
+            background: #fafafa;
+            border-bottom: 1px solid #efefef;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 20px;
+            padding: 6px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .filter-btn.active {
+            background: #0095f6;
+            color: white;
+            border-color: #0095f6;
+        }
+        
+        /* Instagram grid */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: #efefef;
+            min-height: 500px;
+        }
+        
+        .grid-item {
+            aspect-ratio: 4/5;
+            background: #fafafa;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        
+        .grid-item:hover img {
+            transform: scale(1.03);
+        }
+        
+        .grid-item .stats {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .grid-item:hover .stats {
+            opacity: 1;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .reel-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        .post-date {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: white;
+            font-size: 12px;
+            text-shadow: 0 0 3px rgba(0,0,0,0.7);
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .status-badge.draft { background: #6c757d; }
+        .status-badge.scheduled { background: #17a2b8; }
+        .status-badge.approved { background: #28a745; }
+        .status-badge.published { background: #007bff; }
+        
+        /* Status section */
+        .status-section {
+            padding: 20px;
+            text-align: center;
+            background: #fafafa;
+            border-top: 1px solid #efefef;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #dbdbdb;
+        }
+        
+        .status-dot.connected {
+            background: #4caf50;
+        }
+        
+        .last-sync {
+            font-size: 13px;
+            color: #8e8e8e;
+        }
+        
+        /* Footer */
+        .footer {
+            padding: 15px;
+            text-align: center;
+            background: white;
+            color: #8e8e8e;
+            font-size: 13px;
+            border-top: 1px solid #efefef;
+        }
+        
+        .demo-note {
+            background: #fff8e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px;
+            text-align: center;
+            border-left: 4px solid #ffc107;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #262626;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        /* Connection panel */
+        .connection-panel {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .database-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .database-card {
+            background: white;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .database-card:hover {
+            border-color: #0095f6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .database-card.active {
+            border-color: #0095f6;
+            background: #f0f8ff;
+        }
+        
+        .db-icon {
+            width: 40px;
+            height: 40px;
+            background: #e9ecef;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .db-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .db-stats {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .tabs {
+                gap: 20px;
+            }
+            
+            .header {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                gap: 15px;
+            }
+            
+            .tab span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <div class="header">
+            <div class="logo">
+                <i class="fab fa-instagram"></i>
+                <span>GridPreview</span>
+            </div>
+            <div class="tabs">
+                <button class="tab active" data-tab="posts">
+                    <i class="fas fa-th-large"></i>
+                    <span>Posts</span>
+                </button>
+                <button class="tab" data-tab="reels">
+                    <i class="fas fa-play"></i>
+                    <span>Reels</span>
+                </button>
+                <button class="tab" data-tab="tagged">
+                    <i class="fas fa-tag"></i>
+                    <span>Tagged</span>
+                </button>
+            </div>
+            <div class="controls">
+                <button class="control-btn" id="syncBtn" title="Sync with Notion">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="control-btn" id="settingsBtn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="connection-panel">
+            <div class="panel-header">
+                <div class="panel-title">Connected Databases</div>
+                <button class="filter-btn" id="connectBtn">
+                    <i class="fas fa-plus"></i> Add Database
+                </button>
+            </div>
+            <div class="database-list">
+                <div class="database-card active">
+                    <div class="db-icon">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="db-name">Q3 Campaign</div>
+                    <div class="db-stats">24 posts • 8 scheduled</div>
+                </div>
+                <div class="database-card">
+                    <div class="db-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="db-name">Product Launches</div>
+                    <div class="db-stats">12 posts • 3 scheduled</div>
+                </div>
+                <div class="database-card">
+                    <div class="db-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="db-name">Client: FashionCo</div>
+                    <div class="db-stats">18 posts • 6 scheduled</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="calendar-filter">
+            <button class="filter-btn active" data-days="all">All Posts</button>
+            <button class="filter-btn" data-days="7">Next 7 Days</button>
+            <button class="filter-btn" data-days="14">Next 14 Days</button>
+            <button class="filter-btn" data-days="30">Next 30 Days</button>
+            <div style="flex-grow: 1;"></div>
+            <button class="filter-btn" data-status="draft">Drafts</button>
+            <button class="filter-btn" data-status="scheduled">Scheduled</button>
+            <button class="filter-btn" data-status="approved">Approved</button>
+        </div>
+        
+        <div class="grid-container" id="postsGrid">
+            <!-- Grid will be populated by JavaScript -->
+        </div>
+        
+        <div class="grid-container" id="reelsGrid" style="display:none">
+            <!-- Reels grid will be populated by JavaScript -->
+        </div>
+        
+        <div class="grid-container" id="taggedGrid" style="display:none">
+            <!-- Tagged grid will be populated by JavaScript -->
+        </div>
+        
+        <div class="demo-note">
+            <i class="fas fa-info-circle"></i> This is a demo preview. The full widget connects directly to your Notion databases and updates in real-time.
+        </div>
+        
+        <div class="status-section">
+            <div class="status">
+                <div class="status-dot connected"></div>
+                <span id="statusText">Connected to Notion workspace</span>
+            </div>
+            <div class="last-sync" id="lastSync">
+                Last sync: Today at 2:45 PM
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Instagram Grid Preview Widget • v2.1</p>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Database synced successfully</span>
+    </div>
+
+    <script>
+        // Mock data for the grid
+        const mockPosts = [
+            {
+                id: "post-1",
+                type: "post",
+                image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-15",
+                caption: "Sunset at the beach #vacation #sunset",
+                likes: 245,
+                comments: 32,
+                status: "scheduled"
+            },
+            {
+                id: "post-2",
+                type: "post",
+                image: "https://images.unsplash.com/photo-1507146426996-ef05306b995a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-16",
+                caption: "Morning coffee ritual #coffee #morning",
+                likes: 321,
+                comments: 45,
+                status: "approved"
+            },
+            {
+                id: "reel-1",
+                type: "reel",
+                image: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-17",
+                caption: "New recipe tutorial #cooking #food",
+                likes: 512,
+                comments: 67,
+                status: "draft"
+            },
+            {
+                id: "post-3",
+                type: "post",
+                image: "https://images.unsplash.com/photo-1529778873920-4da4926a72c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-18",
+                caption: "Exploring the city streets #urban #city",
+                likes: 189,
+                comments: 28,
+                status: "scheduled"
+            },
+            {
+                id: "tagged-1",
+                type: "tagged",
+                image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-19",
+                caption: "Featured in design magazine #design #featured",
+                likes: 432,
+                comments: 56,
+                status: "approved"
+            },
+            {
+                id: "post-4",
+                type: "post",
+                image: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-20",
+                caption: "Cat of the day #cat #pet",
+                likes: 876,
+                comments: 124,
+                status: "published"
+            },
+            {
+                id: "reel-2",
+                type: "reel",
+                image: "https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-21",
+                caption: "Workout routine #fitness #gym",
+                likes: 654,
+                comments: 89,
+                status: "scheduled"
+            },
+            {
+                id: "post-5",
+                type: "post",
+                image: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-22",
+                caption: "New book just arrived #reading #books",
+                likes: 287,
+                comments: 39,
+                status: "draft"
+            },
+            {
+                id: "post-6",
+                type: "post",
+                image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
+                date: "2023-08-23",
+                caption: "Best friend's birthday #celebration #friends",
+                likes: 421,
+                comments: 72,
+                status: "approved"
+            }
+        ];
+
+        // DOM Elements
+        const tabs = document.querySelectorAll('.tab');
+        const postsGrid = document.getElementById('postsGrid');
+        const reelsGrid = document.getElementById('reelsGrid');
+        const taggedGrid = document.getElementById('taggedGrid');
+        const syncBtn = document.getElementById('syncBtn');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const databaseCards = document.querySelectorAll('.database-card');
+        
+        let activeTab = 'posts';
+        let activeFilter = 'all';
+        let activeStatus = 'all';
+        let filteredPosts = [...mockPosts];
+
+        // Render grid based on content
+        function renderGrid() {
+            // Clear existing grids
+            postsGrid.innerHTML = '';
+            reelsGrid.innerHTML = '';
+            taggedGrid.innerHTML = '';
+            
+            // Filter by active tab
+            const tabPosts = filteredPosts.filter(post => {
+                if (activeTab === 'posts') return post.type === 'post';
+                if (activeTab === 'reels') return post.type === 'reel';
+                if (activeTab === 'tagged') return post.type === 'tagged';
+                return false;
+            });
+            
+            const targetGrid = activeTab === 'posts' ? postsGrid : 
+                             activeTab === 'reels' ? reelsGrid : taggedGrid;
+            
+            if (tabPosts.length === 0) {
+                targetGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 40px; text-align: center;">
+                        <i class="fas fa-calendar-plus" style="font-size: 48px; color: #dbdbdb; margin-bottom: 20px;"></i>
+                        <h3>No Content Scheduled</h3>
+                        <p>Add posts to your Notion database to see them appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tabPosts.forEach(post => {
+                const gridItem = document.createElement('div');
+                gridItem.className = 'grid-item';
+                
+                // Format date
+                const postDate = new Date(post.date);
+                const formattedDate = postDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                gridItem.innerHTML = `
+                    <img src="${post.image}" alt="${post.caption}">
+                    <div class="stats">
+                        <div class="stat">
+                            <i class="fas fa-heart"></i> ${post.likes}
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-comment"></i> ${post.comments}
+                        </div>
+                    </div>
+                    ${post.type === 'reel' ? '<div class="reel-indicator"><i class="fas fa-play"></i></div>' : ''}
+                    <div class="post-date">${formattedDate}</div>
+                    <div class="status-badge ${post.status}">${post.status.charAt(0).toUpperCase() + post.status.slice(1)}</div>
+                `;
+                
+                targetGrid.appendChild(gridItem);
+            });
+        }
+        
+        // Filter posts by date
+        function filterByDate(days) {
+            activeFilter = days;
+            if (days === 'all') {
+                filteredPosts = [...mockPosts];
+            } else {
+                const daysNum = parseInt(days);
+                const today = new Date();
+                const futureDate = new Date();
+                futureDate.setDate(today.getDate() + daysNum);
+                
+                filteredPosts = mockPosts.filter(post => {
+                    const postDate = new Date(post.date);
+                    return postDate >= today && postDate <= futureDate;
+                });
+            }
+            
+            renderGrid();
+        }
+        
+        // Filter by status
+        function filterByStatus(status) {
+            activeStatus = status;
+            if (status === 'all') {
+                filteredPosts = [...mockPosts];
+            } else {
+                filteredPosts = mockPosts.filter(post => post.status === status);
+            }
+            
+            renderGrid();
+        }
+        
+        // Switch tabs
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                activeTab = tab.dataset.tab;
+                
+                // Show correct grid
+                postsGrid.style.display = 'none';
+                reelsGrid.style.display = 'none';
+                taggedGrid.style.display = 'none';
+                
+                if (activeTab === 'posts') {
+                    postsGrid.style.display = 'grid';
+                } else if (activeTab === 'reels') {
+                    reelsGrid.style.display = 'grid';
+                } else if (activeTab === 'tagged') {
+                    taggedGrid.style.display = 'grid';
+                }
+                
+                renderGrid();
+            });
+        });
+        
+        // Date filtering
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.days) {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filterByDate(btn.dataset.days);
+                } else if (btn.dataset.status) {
+                    filterByStatus(btn.dataset.status);
+                }
+            });
+        });
+        
+        // Database selection
+        databaseCards.forEach(card => {
+            card.addEventListener('click', () => {
+                databaseCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                showToast(`Switched to "${card.querySelector('.db-name').textContent}" database`);
+            });
+        });
+        
+        // Sync button
+        syncBtn.addEventListener('click', () => {
+            // Show loading state
+            syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            // Simulate sync delay
+            setTimeout(() => {
+                syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                showToast('Database synced successfully');
+                
+                // Update last sync time
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('lastSync').textContent = `Last sync: Today at ${timeString}`;
+            }, 1500);
+        });
+        
+        // Toast notification
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.style.background = '#262626';
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Initial render
+        renderGrid();
+    </script>
+</body>
+</html>
