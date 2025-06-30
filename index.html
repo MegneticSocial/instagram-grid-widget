@@ -69,6 +69,17 @@
             color: #e1306c;
         }
         
+        .database-info {
+            background: #f0f8ff;
+            border: 1px solid #c2e0ff;
+            border-radius: 6px;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
         /* Tabs navigation */
         .tabs {
             display: flex;
@@ -309,73 +320,6 @@
             opacity: 1;
         }
         
-        /* Connection panel */
-        .connection-panel {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eaeaea;
-        }
-        
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .panel-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .database-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        
-        .database-card {
-            background: white;
-            border: 1px solid #eaeaea;
-            border-radius: 8px;
-            padding: 15px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .database-card:hover {
-            border-color: #0095f6;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        
-        .database-card.active {
-            border-color: #0095f6;
-            background: #f0f8ff;
-        }
-        
-        .db-icon {
-            width: 40px;
-            height: 40px;
-            background: #e9ecef;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-            color: #495057;
-        }
-        
-        .db-name {
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-        
-        .db-stats {
-            font-size: 12px;
-            color: #6c757d;
-        }
-        
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .tabs {
@@ -428,6 +372,10 @@
                     <span>Tagged</span>
                 </button>
             </div>
+            <div class="database-info">
+                <i class="fas fa-database"></i>
+                <span>Social Media Content</span>
+            </div>
             <div class="controls">
                 <button class="control-btn" id="syncBtn" title="Sync with Notion">
                     <i class="fas fa-sync-alt"></i>
@@ -435,38 +383,6 @@
                 <button class="control-btn" id="settingsBtn" title="Settings">
                     <i class="fas fa-cog"></i>
                 </button>
-            </div>
-        </div>
-        
-        <div class="connection-panel">
-            <div class="panel-header">
-                <div class="panel-title">Connected Databases</div>
-                <button class="filter-btn" id="connectBtn">
-                    <i class="fas fa-plus"></i> Add Database
-                </button>
-            </div>
-            <div class="database-list">
-                <div class="database-card active">
-                    <div class="db-icon">
-                        <i class="fas fa-calendar"></i>
-                    </div>
-                    <div class="db-name">Q3 Campaign</div>
-                    <div class="db-stats">24 posts • 8 scheduled</div>
-                </div>
-                <div class="database-card">
-                    <div class="db-icon">
-                        <i class="fas fa-shopping-bag"></i>
-                    </div>
-                    <div class="db-name">Product Launches</div>
-                    <div class="db-stats">12 posts • 3 scheduled</div>
-                </div>
-                <div class="database-card">
-                    <div class="db-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="db-name">Client: FashionCo</div>
-                    <div class="db-stats">18 posts • 6 scheduled</div>
-                </div>
             </div>
         </div>
         
@@ -479,6 +395,7 @@
             <button class="filter-btn" data-status="draft">Drafts</button>
             <button class="filter-btn" data-status="scheduled">Scheduled</button>
             <button class="filter-btn" data-status="approved">Approved</button>
+            <button class="filter-btn" data-status="published">Published</button>
         </div>
         
         <div class="grid-container" id="postsGrid">
@@ -494,7 +411,7 @@
         </div>
         
         <div class="demo-note">
-            <i class="fas fa-info-circle"></i> This is a demo preview. The full widget connects directly to your Notion databases and updates in real-time.
+            <i class="fas fa-info-circle"></i> This widget is connected to your Notion database (Social Media Content). Add posts to your Notion database to see them appear here.
         </div>
         
         <div class="status-section">
@@ -508,7 +425,7 @@
         </div>
         
         <div class="footer">
-            <p>Instagram Grid Preview Widget • v2.1</p>
+            <p>Instagram Grid Preview Widget • v2.1 • Connected to Social Media Content</p>
         </div>
     </div>
     
@@ -518,7 +435,7 @@
     </div>
 
     <script>
-        // Mock data for the grid
+        // Mock data for the grid - tailored to your Notion database
         const mockPosts = [
             {
                 id: "post-1",
@@ -528,7 +445,8 @@
                 caption: "Sunset at the beach #vacation #sunset",
                 likes: 245,
                 comments: 32,
-                status: "scheduled"
+                status: "scheduled",
+                tags: ["travel", "nature"]
             },
             {
                 id: "post-2",
@@ -538,7 +456,8 @@
                 caption: "Morning coffee ritual #coffee #morning",
                 likes: 321,
                 comments: 45,
-                status: "approved"
+                status: "approved",
+                tags: ["lifestyle", "food"]
             },
             {
                 id: "reel-1",
@@ -548,7 +467,8 @@
                 caption: "New recipe tutorial #cooking #food",
                 likes: 512,
                 comments: 67,
-                status: "draft"
+                status: "draft",
+                tags: ["food", "tutorial"]
             },
             {
                 id: "post-3",
@@ -558,7 +478,8 @@
                 caption: "Exploring the city streets #urban #city",
                 likes: 189,
                 comments: 28,
-                status: "scheduled"
+                status: "scheduled",
+                tags: ["travel", "urban"]
             },
             {
                 id: "tagged-1",
@@ -568,7 +489,8 @@
                 caption: "Featured in design magazine #design #featured",
                 likes: 432,
                 comments: 56,
-                status: "approved"
+                status: "approved",
+                tags: ["design", "featured"]
             },
             {
                 id: "post-4",
@@ -578,7 +500,8 @@
                 caption: "Cat of the day #cat #pet",
                 likes: 876,
                 comments: 124,
-                status: "published"
+                status: "published",
+                tags: ["animals", "pets"]
             },
             {
                 id: "reel-2",
@@ -588,7 +511,8 @@
                 caption: "Workout routine #fitness #gym",
                 likes: 654,
                 comments: 89,
-                status: "scheduled"
+                status: "scheduled",
+                tags: ["fitness", "health"]
             },
             {
                 id: "post-5",
@@ -598,7 +522,8 @@
                 caption: "New book just arrived #reading #books",
                 likes: 287,
                 comments: 39,
-                status: "draft"
+                status: "draft",
+                tags: ["reading", "books"]
             },
             {
                 id: "post-6",
@@ -608,7 +533,8 @@
                 caption: "Best friend's birthday #celebration #friends",
                 likes: 421,
                 comments: 72,
-                status: "approved"
+                status: "approved",
+                tags: ["celebration", "friends"]
             }
         ];
 
@@ -621,7 +547,6 @@
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
         const filterBtns = document.querySelectorAll('.filter-btn');
-        const databaseCards = document.querySelectorAll('.database-card');
         
         let activeTab = 'posts';
         let activeFilter = 'all';
@@ -752,17 +677,12 @@
                     btn.classList.add('active');
                     filterByDate(btn.dataset.days);
                 } else if (btn.dataset.status) {
+                    filterBtns.forEach(b => {
+                        if (b.dataset.status) b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
                     filterByStatus(btn.dataset.status);
                 }
-            });
-        });
-        
-        // Database selection
-        databaseCards.forEach(card => {
-            card.addEventListener('click', () => {
-                databaseCards.forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-                showToast(`Switched to "${card.querySelector('.db-name').textContent}" database`);
             });
         });
         
@@ -774,7 +694,7 @@
             // Simulate sync delay
             setTimeout(() => {
                 syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
-                showToast('Database synced successfully');
+                showToast('Notion database synced successfully');
                 
                 // Update last sync time
                 const now = new Date();
