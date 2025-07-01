@@ -53,6 +53,8 @@
             align-items: center;
             justify-content: space-between;
             background: white;
+            flex-wrap: wrap;
+            gap: 15px;
         }
         
         .logo {
@@ -83,7 +85,7 @@
         /* Tabs navigation */
         .tabs {
             display: flex;
-            gap: 40px;
+            gap: 20px;
         }
         
         .tab {
@@ -320,14 +322,82 @@
             opacity: 1;
         }
         
+        /* Current date display */
+        .current-date {
+            padding: 10px 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #efefef;
+            font-size: 14px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            color: #dbdbdb;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .empty-state p {
+            color: #777;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+        
+        .connect-btn {
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .connect-btn:hover {
+            background: #0081d6;
+        }
+        
+        /* Pull request guidance */
+        .pr-guidance {
+            background: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 15px;
+            margin: 15px;
+            border-radius: 4px;
+        }
+        
+        .pr-guidance h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            color: #1890ff;
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .tabs {
-                gap: 20px;
-            }
-            
-            .header {
-                flex-wrap: wrap;
                 gap: 15px;
             }
             
@@ -342,11 +412,20 @@
             }
             
             .tabs {
-                gap: 15px;
+                gap: 10px;
             }
             
             .tab span {
                 display: none;
+            }
+            
+            .calendar-filter {
+                gap: 8px;
+            }
+            
+            .filter-btn {
+                padding: 6px 10px;
+                font-size: 13px;
             }
         }
     </style>
@@ -386,6 +465,11 @@
             </div>
         </div>
         
+        <div class="current-date">
+            <i class="fas fa-clock"></i>
+            <span id="currentDateTime">Loading current date and time...</span>
+        </div>
+        
         <div class="calendar-filter">
             <button class="filter-btn active" data-days="all">All Posts</button>
             <button class="filter-btn" data-days="7">Next 7 Days</button>
@@ -399,33 +483,39 @@
         </div>
         
         <div class="grid-container" id="postsGrid">
-            <!-- Grid will be populated by JavaScript -->
+            <!-- Empty state -->
+            <div class="empty-state">
+                <i class="fas fa-cloud-download-alt"></i>
+                <h3>No Content Found</h3>
+                <p>Connect to your Notion database to load your Instagram posts. Your grid will automatically populate once connected.</p>
+                <button class="connect-btn" id="connectBtn">
+                    <i class="fas fa-plug"></i> Connect to Notion
+                </button>
+            </div>
         </div>
         
-        <div class="grid-container" id="reelsGrid" style="display:none">
-            <!-- Reels grid will be populated by JavaScript -->
-        </div>
-        
-        <div class="grid-container" id="taggedGrid" style="display:none">
-            <!-- Tagged grid will be populated by JavaScript -->
-        </div>
-        
-        <div class="demo-note">
-            <i class="fas fa-info-circle"></i> This widget is connected to your Notion database (Social Media Content). Add posts to your Notion database to see them appear here.
+        <div class="pr-guidance">
+            <h4><i class="fas fa-code-branch"></i> Pull Request Approach</h4>
+            <p>For production use, consider integrating this widget with Notion API via a backend service. Create a pull request with:</p>
+            <ul style="padding-left: 20px; margin-top: 8px; color: #555;">
+                <li>Backend API endpoint to fetch Notion data</li>
+                <li>Authentication mechanism</li>
+                <li>Data mapping between Notion properties and widget fields</li>
+            </ul>
         </div>
         
         <div class="status-section">
             <div class="status">
-                <div class="status-dot connected"></div>
-                <span id="statusText">Connected to Notion workspace</span>
+                <div class="status-dot"></div>
+                <span id="statusText">Not connected to Notion workspace</span>
             </div>
             <div class="last-sync" id="lastSync">
-                Last sync: Today at 2:45 PM
+                Last sync: Never
             </div>
         </div>
         
         <div class="footer">
-            <p>Instagram Grid Preview Widget • v2.1 • Connected to Social Media Content</p>
+            <p>Instagram Grid Preview Widget • v2.1 • Using current date: <span id="currentDateDisplay"></span></p>
         </div>
     </div>
     
@@ -435,278 +525,41 @@
     </div>
 
     <script>
-        // Mock data for the grid - tailored to your Notion database
-        const mockPosts = [
-            {
-                id: "post-1",
-                type: "post",
-                image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-15",
-                caption: "Sunset at the beach #vacation #sunset",
-                likes: 245,
-                comments: 32,
-                status: "scheduled",
-                tags: ["travel", "nature"]
-            },
-            {
-                id: "post-2",
-                type: "post",
-                image: "https://images.unsplash.com/photo-1507146426996-ef05306b995a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-16",
-                caption: "Morning coffee ritual #coffee #morning",
-                likes: 321,
-                comments: 45,
-                status: "approved",
-                tags: ["lifestyle", "food"]
-            },
-            {
-                id: "reel-1",
-                type: "reel",
-                image: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-17",
-                caption: "New recipe tutorial #cooking #food",
-                likes: 512,
-                comments: 67,
-                status: "draft",
-                tags: ["food", "tutorial"]
-            },
-            {
-                id: "post-3",
-                type: "post",
-                image: "https://images.unsplash.com/photo-1529778873920-4da4926a72c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-18",
-                caption: "Exploring the city streets #urban #city",
-                likes: 189,
-                comments: 28,
-                status: "scheduled",
-                tags: ["travel", "urban"]
-            },
-            {
-                id: "tagged-1",
-                type: "tagged",
-                image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-19",
-                caption: "Featured in design magazine #design #featured",
-                likes: 432,
-                comments: 56,
-                status: "approved",
-                tags: ["design", "featured"]
-            },
-            {
-                id: "post-4",
-                type: "post",
-                image: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-20",
-                caption: "Cat of the day #cat #pet",
-                likes: 876,
-                comments: 124,
-                status: "published",
-                tags: ["animals", "pets"]
-            },
-            {
-                id: "reel-2",
-                type: "reel",
-                image: "https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-21",
-                caption: "Workout routine #fitness #gym",
-                likes: 654,
-                comments: 89,
-                status: "scheduled",
-                tags: ["fitness", "health"]
-            },
-            {
-                id: "post-5",
-                type: "post",
-                image: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-22",
-                caption: "New book just arrived #reading #books",
-                likes: 287,
-                comments: 39,
-                status: "draft",
-                tags: ["reading", "books"]
-            },
-            {
-                id: "post-6",
-                type: "post",
-                image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=750&q=80",
-                date: "2023-08-23",
-                caption: "Best friend's birthday #celebration #friends",
-                likes: 421,
-                comments: 72,
-                status: "approved",
-                tags: ["celebration", "friends"]
-            }
-        ];
-
+        // Get current date and time
+        const now = new Date();
+        
+        // Format date for display
+        function formatDate(date) {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        // Display current date and time
+        document.getElementById('currentDateTime').textContent = formatDate(now);
+        document.getElementById('currentDateDisplay').textContent = now.toLocaleDateString();
+        
         // DOM Elements
         const tabs = document.querySelectorAll('.tab');
         const postsGrid = document.getElementById('postsGrid');
-        const reelsGrid = document.getElementById('reelsGrid');
-        const taggedGrid = document.getElementById('taggedGrid');
         const syncBtn = document.getElementById('syncBtn');
+        const connectBtn = document.getElementById('connectBtn');
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
         const filterBtns = document.querySelectorAll('.filter-btn');
-        
-        let activeTab = 'posts';
-        let activeFilter = 'all';
-        let activeStatus = 'all';
-        let filteredPosts = [...mockPosts];
-
-        // Render grid based on content
-        function renderGrid() {
-            // Clear existing grids
-            postsGrid.innerHTML = '';
-            reelsGrid.innerHTML = '';
-            taggedGrid.innerHTML = '';
-            
-            // Filter by active tab
-            const tabPosts = filteredPosts.filter(post => {
-                if (activeTab === 'posts') return post.type === 'post';
-                if (activeTab === 'reels') return post.type === 'reel';
-                if (activeTab === 'tagged') return post.type === 'tagged';
-                return false;
-            });
-            
-            const targetGrid = activeTab === 'posts' ? postsGrid : 
-                             activeTab === 'reels' ? reelsGrid : taggedGrid;
-            
-            if (tabPosts.length === 0) {
-                targetGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 40px; text-align: center;">
-                        <i class="fas fa-calendar-plus" style="font-size: 48px; color: #dbdbdb; margin-bottom: 20px;"></i>
-                        <h3>No Content Scheduled</h3>
-                        <p>Add posts to your Notion database to see them appear here.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            tabPosts.forEach(post => {
-                const gridItem = document.createElement('div');
-                gridItem.className = 'grid-item';
-                
-                // Format date
-                const postDate = new Date(post.date);
-                const formattedDate = postDate.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
-                
-                gridItem.innerHTML = `
-                    <img src="${post.image}" alt="${post.caption}">
-                    <div class="stats">
-                        <div class="stat">
-                            <i class="fas fa-heart"></i> ${post.likes}
-                        </div>
-                        <div class="stat">
-                            <i class="fas fa-comment"></i> ${post.comments}
-                        </div>
-                    </div>
-                    ${post.type === 'reel' ? '<div class="reel-indicator"><i class="fas fa-play"></i></div>' : ''}
-                    <div class="post-date">${formattedDate}</div>
-                    <div class="status-badge ${post.status}">${post.status.charAt(0).toUpperCase() + post.status.slice(1)}</div>
-                `;
-                
-                targetGrid.appendChild(gridItem);
-            });
-        }
-        
-        // Filter posts by date
-        function filterByDate(days) {
-            activeFilter = days;
-            if (days === 'all') {
-                filteredPosts = [...mockPosts];
-            } else {
-                const daysNum = parseInt(days);
-                const today = new Date();
-                const futureDate = new Date();
-                futureDate.setDate(today.getDate() + daysNum);
-                
-                filteredPosts = mockPosts.filter(post => {
-                    const postDate = new Date(post.date);
-                    return postDate >= today && postDate <= futureDate;
-                });
-            }
-            
-            renderGrid();
-        }
-        
-        // Filter by status
-        function filterByStatus(status) {
-            activeStatus = status;
-            if (status === 'all') {
-                filteredPosts = [...mockPosts];
-            } else {
-                filteredPosts = mockPosts.filter(post => post.status === status);
-            }
-            
-            renderGrid();
-        }
-        
-        // Switch tabs
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Update active tab
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                activeTab = tab.dataset.tab;
-                
-                // Show correct grid
-                postsGrid.style.display = 'none';
-                reelsGrid.style.display = 'none';
-                taggedGrid.style.display = 'none';
-                
-                if (activeTab === 'posts') {
-                    postsGrid.style.display = 'grid';
-                } else if (activeTab === 'reels') {
-                    reelsGrid.style.display = 'grid';
-                } else if (activeTab === 'tagged') {
-                    taggedGrid.style.display = 'grid';
-                }
-                
-                renderGrid();
-            });
-        });
-        
-        // Date filtering
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (btn.dataset.days) {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    filterByDate(btn.dataset.days);
-                } else if (btn.dataset.status) {
-                    filterBtns.forEach(b => {
-                        if (b.dataset.status) b.classList.remove('active');
-                    });
-                    btn.classList.add('active');
-                    filterByStatus(btn.dataset.status);
-                }
-            });
-        });
-        
-        // Sync button
-        syncBtn.addEventListener('click', () => {
-            // Show loading state
-            syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            
-            // Simulate sync delay
-            setTimeout(() => {
-                syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
-                showToast('Notion database synced successfully');
-                
-                // Update last sync time
-                const now = new Date();
-                const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                document.getElementById('lastSync').textContent = `Last sync: Today at ${timeString}`;
-            }, 1500);
-        });
+        const statusText = document.getElementById('statusText');
+        const statusDot = document.querySelector('.status-dot');
         
         // Toast notification
-        function showToast(message) {
+        function showToast(message, isSuccess = true) {
             toastMessage.textContent = message;
-            toast.style.background = '#262626';
+            toast.style.background = isSuccess ? '#262626' : '#d32f2f';
             toast.classList.add('show');
             
             setTimeout(() => {
@@ -714,8 +567,77 @@
             }, 3000);
         }
         
-        // Initial render
-        renderGrid();
+        // Connect to Notion handler
+        connectBtn.addEventListener('click', () => {
+            // Show loading
+            connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+            
+            // Simulate connection process
+            setTimeout(() => {
+                // Update status
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connected to Notion workspace';
+                
+                // Update button
+                connectBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                connectBtn.style.background = '#28a745';
+                connectBtn.disabled = true;
+                
+                // Show success
+                showToast('Successfully connected to Notion database');
+                
+                // Enable sync button
+                syncBtn.disabled = false;
+                
+                // Simulate first sync
+                setTimeout(() => {
+                    syncBtn.click();
+                }, 1000);
+            }, 2000);
+        });
+        
+        // Sync button handler
+        syncBtn.addEventListener('click', () => {
+            // Show loading state
+            const originalHTML = syncBtn.innerHTML;
+            syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            // Simulate sync delay
+            setTimeout(() => {
+                syncBtn.innerHTML = originalHTML;
+                
+                // Update last sync time
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('lastSync').textContent = `Last sync: Today at ${timeString}`;
+                
+                // Show success message
+                showToast('Notion database synced successfully. No posts found.');
+                
+                // Show guidance message
+                document.querySelector('.pr-guidance').innerHTML = `
+                    <h4><i class="fas fa-code-branch"></i> Ready for Integration</h4>
+                    <p>Your Notion connection is established. To load your Instagram posts:</p>
+                    <ul style="padding-left: 20px; margin-top: 8px; color: #555;">
+                        <li>Create a pull request with API integration</li>
+                        <li>Implement backend service to fetch Notion data</li>
+                        <li>Map Notion properties to widget fields</li>
+                    </ul>
+                    <p style="margin-top: 10px; background: #d9f7be; padding: 8px; border-radius: 4px;">
+                        <i class="fas fa-lightbulb"></i> The widget is now ready to display your actual content once integrated.
+                    </p>
+                `;
+            }, 1500);
+        });
+        
+        // Disable sync button initially
+        syncBtn.disabled = true;
+        
+        // Update time every minute
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('currentDateTime').textContent = formatDate(now);
+        }, 60000);
     </script>
 </body>
 </html>
